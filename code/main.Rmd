@@ -88,6 +88,9 @@ rf_fit
 varImp(rf_fit)$importance
 ```
 
+```{r}
+pontos@data$predsitio <- rf_fit$finalModel$predicted
+```
 
 ```{r}
 beginCluster()
@@ -99,7 +102,3 @@ prediction <- as.factor(calc(x = prediction, fun = nnet::which.is.max)) %>% plot
 ```
 
 
-```{r}
-pontos@data$predsitio <- rf_fit$finalModel$predicted
-table(pontos$Sitio, predict(ajuste_glm) > 0.5)
-```

@@ -22,6 +22,9 @@ library(caret)
 library(randomForest)
 ```
 
+#Realizar a predição dos sítios via RF
+#Comparar predito e observado
+
 ```{r}
 rm(list = ls())
 pontos <- read.csv('../data/GateadosDados.csv', dec = ".", sep= ";", stringsAsFactors = FALSE)
@@ -66,18 +69,16 @@ pontos$DECLI <- raster::extract(DECLI, pontos)
 summary(pontos@data)
 ```
 
+Para visualizar alguma possível relação entre as variáveis ambientais e o sítio:
+
 ```{r}
 tabplot::tableplot(pontos@data, sortCol = "Sitio", decreasing = F)
 ```
 
-Para utilizar a variável sítio como independente tentei usar a regressão logística múltipla. Porém, até onde li, ela não considera as autocorrelações entre os dados.
-
-Teste
-
 #Random Forest
 
 ```{r}
-rf_fit <- caret::train(Sitio ~ ELEV + VD + TWI + CNBL + DECLI + PFd + EA + h, data = pontos@data,
+rf_fit <- caret::train(Sitio ~ ELEV + VD + TWI + CNBL + DECLI, data = pontos@data,
                        method = "rf", tuneLength = 1, importance = TRUE, trControl = trainControl("LOOCV"))
 
 rf_fit
@@ -89,7 +90,16 @@ varImp(rf_fit)$importance
 
 
 ```{r}
+beginCluster()
+prediction <- 
+  clusterR(brick(ELEV, CNBL, DECLI, TWI, VD), raster::predict, 
+           args = list(model = rf_fit, type = "prob", index = 1:nlevels(pontos$Sitio)))
+endCluster()
+prediction <- as.factor(calc(x = prediction, fun = nnet::which.is.max)) %>% plot()
+```
+
+
+```{r}
 pontos@data$predsitio <- rf_fit$finalModel$predicted
 table(pontos$Sitio, predict(ajuste_glm) > 0.5)
 ```
-

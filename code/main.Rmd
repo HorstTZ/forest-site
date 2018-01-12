@@ -89,7 +89,7 @@ varImp(rf_fit)$importance
 ```
 
 ```{r}
-pontos@data$predsitio <- rf_fit$finalModel$predicted
+pontos@data$prediction <- rf_fit$finalModel$predicted
 ```
 
 ```{r}
@@ -99,6 +99,12 @@ prediction <-
            args = list(model = rf_fit, type = "prob", index = 1:nlevels(pontos$Sitio)))
 endCluster()
 prediction <- as.factor(calc(x = prediction, fun = nnet::which.is.max)) %>% plot()
+```
+
+#Teste: Ajuste entre a altura das árvores e o sítio predito e observado
+
+```{r}
+lm(h ~ prediction + Sitio, data = pontos) %>% summary
 ```
 
 

@@ -1,0 +1,78 @@
+---
+title: "main"
+author: "Horst"
+date: "12 de janeiro de 2018"
+output: bookdown::html_document2
+lang: pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, eval=FALSE}
+rmarkdown::render('main.Rmd', encoding = 'UTF-8', output_dir = "../docs")
+```
+
+```{r, include=FALSE}
+library(magrittr)
+library(mapview)
+library(lattice)
+```
+
+```{r}
+rm(list = ls())
+pontos <- read.csv('../data/GateadosDados.csv', dec = ".", sep= ";", stringsAsFactors = FALSE)
+pontos$PFd <- pontos$PF / 10 %>% round()
+sp::coordinates(pontos) <- c('X' , 'Y')
+wgs84utm22s <- sp::CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+sp::proj4string(pontos) <- wgs84utm22s
+
+# TZH: 
+#Sobre a observação de arredondar os valores feita no trabalho da disciplina:
+#Entendo que os valores foram arredondados do campo. Todos os valores de profundidade foram tomados como sendo múltiplos de 0,5 dm. Na planilha original eles foram anotados como sendo em centímetros. Entendo que não é certo usar a medida de centímetro pela questão da precisão com que os números foram obtidos. O arredondamento que tu se refere é dos valores 1,5 e 5,5 para inteiros? Pq da forma que esta no script os valores não mudaram (nem usando o parâmetro digits = 0 da função round) por causa da precisão. Pode me explicar melhor o que tu quis dizer?
+```
+
+```{r}
+Sitio <- raster::raster("../data/Covars/Sitio.tif")
+sp::proj4string(Sitio) <- wgs84utm22s
+pontos$Sitio <- raster::extract(Sitio, pontos) %>% as.factor()
+pontos <- pontos[!is.na(pontos$Sitio), ]
+```
+
+```{r, fig.asp=1}
+mapview(pontos, zcol = "PFd")
+```
+
+```{r}
+summary(pontos$PFd)
+```
+
+```{r, fig.asp=1}
+histogram(pontos$PFd) + latticeExtra::layer(panel.grid(v = 0)) + latticeExtra::layer(panel.rug(pontos$PFd))
+```
+
+```{r}
+ELEV <- raster::raster("../data/Covars/ELEV.tif")
+VD <- raster::raster("../data/Covars/VD.tif")
+TWI <- raster::raster("../data/Covars/TWI.tif")
+CNBL <- raster::raster("../data/Covars/CNBL.tif")
+DECLI <- raster::raster("../data/Covars/DECLI.tif")
+```
+
+```{r}
+pontos$ELEV <- raster::extract(ELEV, pontos)
+pontos$VD <- raster::extract(VD, pontos)
+pontos$TWI <- raster::extract(TWI, pontos)
+pontos$CNBL <- raster::extract(CNBL, pontos)
+pontos$DECLI <- raster::extract(DECLI, pontos)
+```
+
+```{r}
+plot(Sitio, main = paste("n = ", length(pontos)))
+points(pontos@coords)
+```
+
+```{r}
+lm(PFd ~ ELEV + VD + TWI + CNBL + DECLI + X + Y, data = pontos) %>% summary()
+```

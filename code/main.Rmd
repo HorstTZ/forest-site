@@ -22,8 +22,8 @@ library(caret)
 library(randomForest)
 ```
 
-#Realizar a predição dos sítios via RF
-#Comparar predito e observado
+#Proposta de trabalho:
+identificar as características ambientais determinantes da qualidade de sítios florestais
 
 ```{r}
 rm(list = ls())
@@ -33,7 +33,6 @@ sp::coordinates(pontos) <- c('X' , 'Y')
 wgs84utm22s <- sp::CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
 sp::proj4string(pontos) <- wgs84utm22s
 
-# TZH: 
 #Sobre a observação de arredondar os valores feita no trabalho da disciplina:
 #Entendo que os valores foram arredondados do campo. Todos os valores de profundidade foram tomados como sendo múltiplos de 0,5 dm. Na planilha original eles foram anotados como sendo em centímetros. Entendo que não é certo usar a medida de centímetro pela questão da precisão com que os números foram obtidos. O arredondamento que tu se refere é dos valores 1,5 e 5,5 para inteiros? Pq da forma que esta no script os valores não mudaram (nem usando o parâmetro digits = 0 da função round) por causa da precisão. Pode me explicar melhor o que tu quis dizer?
 ```
@@ -75,7 +74,13 @@ Para visualizar alguma possível relação entre as variáveis ambientais e o s�
 tabplot::tableplot(pontos@data, sortCol = "Sitio", decreasing = F)
 ```
 
-#Random Forest
+
+
+#TESTE 1
+##Objetivo:
+Comparar a relação entre a altura das árvores e os valores de sítio preditos e observados
+
+Realizei a predição dos sítios via RF e utilizei valores de sítio preditos e observados na regressão linear com a altura e circunferência das árvores.
 
 ```{r}
 rf_fit <- caret::train(Sitio ~ ELEV + VD + TWI + CNBL + DECLI, data = pontos@data,
@@ -98,13 +103,17 @@ prediction <-
   clusterR(brick(ELEV, CNBL, DECLI, TWI, VD), raster::predict, 
            args = list(model = rf_fit, type = "prob", index = 1:nlevels(pontos$Sitio)))
 endCluster()
-prediction <- as.factor(calc(x = prediction, fun = nnet::which.is.max)) %>% plot()
+prediction <- as.factor(calc(x = prediction, fun = nnet::which.is.max)) %>% plot(main='Predicted site index')
 ```
 
-#Teste: Ajuste entre a altura das árvores e o sítio predito e observado
+```{r}
+plot(Sitio, main='Site index')
+```
+
+Ajuste entre a altura das árvores e o sítio predito e observado:
 
 ```{r}
-lm(h ~ prediction + Sitio, data = pontos) %>% summary
+lm(h ~ CAP + prediction + Sitio, data = pontos) %>% summary
 ```
 
 

@@ -71,8 +71,8 @@ tabplot::tableplot(pontos@data, sortCol = "Sitio", decreasing = F)
 ```
 
 Para utilizar a variável sítio como independente tentei usar a regressão logística múltipla. Porém, até onde li, ela não considera as autocorrelações entre os dados.
-Resolvi testar o modelo Random forest e fazer a predição do sitio utilizando como covariáveis os atributos de terreno
 
+Teste
 
 #Random Forest
 
